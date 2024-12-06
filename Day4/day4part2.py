@@ -1,4 +1,4 @@
-fileContents = open("C:/Users/786/Advent of Code/puzzle.txt")
+fileContents = open("puzzle.txt")
 arr = fileContents.read().split("\n")
 
 word_search: dict[tuple[int, int], str] = dict()
