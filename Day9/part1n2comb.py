@@ -1,3 +1,5 @@
+from Day9.part1n2comb import compact_disk
+
 def parse_disk_map(disk_map):
     """Convert disk map string into list of files and spaces"""
     result = []
@@ -22,30 +24,76 @@ def create_block_representation(parsed_map):
     
     return blocks
 
-def compact_disk(blocks):
-    """Move files from right to left to fill gaps"""
-    length = len(blocks)
+def get_file_positions(blocks):
+    """Get the start position and length of each file in the blocks"""
+    file_positions = {}  # {file_id: (start_pos, length)}
+    current_file = None
+    start_pos = None
+    length = 0
+    
+    for pos, block in enumerate(blocks):
+        if block != '.':  # It's a file block
+            if current_file != block:  # Start of new file
+                if current_file is not None:
+                    file_positions[current_file] = (start_pos, length)
+                current_file = block
+                start_pos = pos
+                length = 1
+            else:  # Continuation of current file
+                length += 1
+        elif current_file is not None:  # End of file
+            file_positions[current_file] = (start_pos, length)
+            current_file = None
+            length = 0
+    
+    # Handle last file if it ends at the end of blocks
+    if current_file is not None:
+        file_positions[current_file] = (start_pos, length)
+    
+    return file_positions
+
+def find_leftmost_space(blocks, required_length, min_position=0):
+    """Find the leftmost contiguous free space of required length"""
+    current_length = 0
+    start_pos = None
+    
+    for pos in range(min_position, len(blocks)):
+        if blocks[pos] == '.':
+            if start_pos is None:
+                start_pos = pos
+            current_length += 1
+            if current_length >= required_length:
+                return start_pos
+        else:
+            start_pos = None
+            current_length = 0
+    
+    return None
+
+def compact_disk_whole_files(blocks):
+    """Move whole files from right to left, starting with highest file ID"""
     result = blocks.copy()
+    file_positions = get_file_positions(result)
     
-    # Keep track of the rightmost file we've moved
-    rightmost_file_pos = length - 1
+    # Sort file IDs in descending order
+    file_ids = sorted(file_positions.keys(), reverse=True)
     
-    # Find and fill each gap from left to right
-    for i in range(length):
-        if result[i] == '.':  # Found a gap
-            # Find the rightmost file that hasn't been moved yet
-            while rightmost_file_pos > i and (result[rightmost_file_pos] == '.' or result[rightmost_file_pos] == 'x'):
-                rightmost_file_pos -= 1
-                
-            if rightmost_file_pos <= i:
-                break
-                
-            # Move the file block
-            result[i] = result[rightmost_file_pos]
-            result[rightmost_file_pos] = 'x'  # Mark as moved
+    for file_id in file_ids:
+        start_pos, length = file_positions[file_id]
+        # Find leftmost space that can fit this file
+        new_pos = find_leftmost_space(result, length)
+        
+        if new_pos is not None and new_pos < start_pos:
+            # Move the file
+            file_blocks = [file_id] * length
+            # Clear old position
+            for i in range(start_pos, start_pos + length):
+                result[i] = '.'
+            # Place in new position
+            for i in range(new_pos, new_pos + length):
+                result[i] = file_id
     
-    # Clean up the 'x' markers
-    return [x if x != 'x' else '.' for x in result]
+    return result
 
 def calculate_checksum(blocks):
     """Calculate checksum by multiplying position by file ID"""
@@ -55,7 +103,7 @@ def calculate_checksum(blocks):
             checksum += pos * block
     return checksum
 
-def solve_disk_fragmenter(disk_map):
+def solve_disk_fragmenter(disk_map, use_whole_files=False):
     """Main function to solve the puzzle"""
     # Parse the input
     parsed_map = parse_disk_map(disk_map)
@@ -63,8 +111,11 @@ def solve_disk_fragmenter(disk_map):
     # Create initial block representation
     blocks = create_block_representation(parsed_map)
     
-    # Compact the disk
-    compacted_blocks = compact_disk(blocks)
+    # Compact the disk using specified method
+    if use_whole_files:
+        compacted_blocks = compact_disk_whole_files(blocks)
+    else:
+        compacted_blocks = compact_disk(blocks)
     
     # Calculate and return checksum
     return calculate_checksum(compacted_blocks)
@@ -77,8 +128,12 @@ def read_input_file(filename):
 # Main execution
 if __name__ == "__main__":
     # Read the input file
-    input_data = read_input_file('C:/Users/786/Advent of Code/input.txt')
+    input_data = read_input_file('input.txt') #You Input File
     
-    # Solve the puzzle
-    result = solve_disk_fragmenter(input_data)
-    print(f"Filesystem checksum: {result}")
+    # Solve Part 1
+    result_part1 = solve_disk_fragmenter(input_data, use_whole_files=False)
+    print(f"Part 1 - Filesystem checksum: {result_part1}")
+    
+    # Solve Part 2
+    result_part2 = solve_disk_fragmenter(input_data, use_whole_files=True)
+    print(f"Part 2 - Filesystem checksum: {result_part2}")
