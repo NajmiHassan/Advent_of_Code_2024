@@ -1,75 +1,54 @@
 from collections import deque
-from typing import List, Set, Tuple
+from typing import List, Tuple
 
-def parse_map(grid_str: str) -> List[List[int]]:
+
+def parse_input(input_str: str) -> List[List[int]]:
     """Parse the input string into a 2D grid of integers."""
-    return [[int(c) for c in line.strip()] 
-            for line in grid_str.strip().split('\n')]
+    return [[int(c) for c in line.strip()] for line in input_str.strip().split('\n')]
 
 def get_neighbors(x: int, y: int, rows: int, cols: int) -> List[Tuple[int, int]]:
     """Get valid neighboring positions (up, down, left, right)."""
     directions = [(0, 1), (1, 0), (0, -1), (-1, 0)]  # right, down, left, up
-    neighbors = []
-    for dx, dy in directions:
-        new_x, new_y = x + dx, y + dy
-        if 0 <= new_x < rows and 0 <= new_y < cols:
-            neighbors.append((new_x, new_y))
-    return neighbors
+    return [(x + dx, y + dy) for dx, dy in directions 
+            if 0 <= x + dx < rows and 0 <= y + dy < cols]
 
+# Part 1: Finding reachable nines
 def find_reachable_nines(grid: List[List[int]], start_x: int, start_y: int) -> int:
-    """
-    Find number of height-9 positions reachable from a trailhead using valid hiking trails.
-    Uses BFS to explore all possible paths that increase by exactly 1 at each step.
-    """
+    """Find number of height-9 positions reachable from a trailhead."""
     rows, cols = len(grid), len(grid[0])
-    visited = set()  # Track visited positions with their current height
-    reachable_nines = set()  # Set of reachable height-9 positions
-    
-    # Queue stores: (x, y, current_height)
+    visited = set()
+    reachable_nines = set()
     queue = deque([(start_x, start_y, 0)])
     visited.add((start_x, start_y, 0))
-    
+
     while queue:
         x, y, height = queue.popleft()
-        
-        # If we've reached height 9, add to reachable_nines
         if grid[x][y] == 9:
             reachable_nines.add((x, y))
             continue
-        
-        # Check all neighboring positions
+
         for next_x, next_y in get_neighbors(x, y, rows, cols):
             next_height = grid[next_x][next_y]
-            
-            # Only follow path if it increases by exactly 1
-            if next_height == height + 1:
-                if (next_x, next_y, next_height) not in visited:
-                    visited.add((next_x, next_y, next_height))
-                    queue.append((next_x, next_y, next_height))
-    
+            if next_height == height + 1 and (next_x, next_y, next_height) not in visited:
+                visited.add((next_x, next_y, next_height))
+                queue.append((next_x, next_y, next_height))
+
     return len(reachable_nines)
 
-def solve_hiking_trails(input_str: str) -> int:
-    """
-    Find the sum of scores for all trailheads in the topographic map.
-    """
-    # Parse input into grid
-    grid = parse_map(input_str)
+def solve_part1(grid: List[List[int]]) -> int:
+    """Solve Part 1 of the puzzle."""
     rows, cols = len(grid), len(grid[0])
-    total_score = 0
-    
-    # Find all trailheads (positions with height 0)
+    total_reachable_nines = 0
+
     for i in range(rows):
         for j in range(cols):
             if grid[i][j] == 0:
-                # Calculate score for this trailhead
-                score = find_reachable_nines(grid, i, j)
-                total_score += score
-    
-    return total_score
+                total_reachable_nines += find_reachable_nines(grid, i, j)
 
-# Test with the example from the problem
-test_input = """Your Puzzle Input Here"""
+    return total_reachable_nines
 
-result = solve_hiking_trails(test_input)
-print(f"Test result: {result}")  # Should print 36
+input_str = """Your Puzzle Input Here"""
+grid = parse_input(input_str)
+
+part1_result = solve_part1(grid)
+print(f"Part 1 Result: {part1_result}")
