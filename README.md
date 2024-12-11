@@ -8,7 +8,6 @@ Welcome to the **Advent of Code 2024** repository! This is your one-stop guide t
 - [Introduction](#introduction)
 - [What is Advent of Code?](#what-is-advent-of-code)
 - [Getting Started](#getting-started)
-- [Repository Structure](#repository-structure)
 - [How to Participate](#how-to-participate)
 - [Contributing](#contributing)
 - [Technologies Used](#technologies-used)
