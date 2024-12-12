@@ -50,4 +50,4 @@ def calculate_total_price(input_map):
 
 input_map = """Your Puzzle Input Here"""
 
-print(calculate_total_price(input_map))  # Output: 1930
+print(calculate_total_price(input_map))
